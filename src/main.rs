@@ -1,13 +1,15 @@
 use std::default::Default;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use ascii_converter::*;
 
 
 fn main() {
-    let test_file = String::from("C:\\narnia\\L0\\RF-00-0100.wfm");
+    //let test_file = String::from("C:\\narnia\\L0\\RF-00-0100.wfm");
+    let test_file = String::from("C:\\narnia\\RF-00-0100.wfm");
     let mut test_wfm_object = WFMFile {..Default::default() };
     test_wfm_object.load_file(test_file);
+    test_wfm_object.write_csv(String::from("C:\\narnia\\output_test.csv"));
 }
 
 #[derive(Default)]
@@ -23,24 +25,51 @@ impl WFMFile {
         self.file_path = input_file;
         let mut file_handle = File::open(&self.file_path).unwrap();
         let mut header_buf: [u8; 838] = [0; 838];
+        let mut full_buffer: Vec<u8> = Vec::new();
+
         file_handle.read_exact(&mut header_buf).unwrap();
         self.file_header.parse_header(&header_buf);
+        file_handle.read_to_end(&mut full_buffer).unwrap();
         self.file_content = WFMContent { ..Default::default() };
         let mut recordidx = 0;
-        
-        let tmp_vec: [u8; self.file_header.usable_record_length] = [0; self.file_header.usable_record_length];
-        while recordidx < self.file_header.num_fastframes
-        {
-            println!("Processing Record #{}", recordidx);
+        let mut curve_vector: Vec<i8> = Vec::with_capacity(
+            (self.file_header.num_fastframes * self.file_header.full_record_length as u32)
+            as usize);
 
-            recordidx += 1;
+        while recordidx < (self.file_header.num_fastframes - 1)
+        {
+            
         }
+        self.file_content.raw_frames = curve_vector;
+    }
+
+    fn write_csv(&mut self, output_file: String)
+    {
+        let csvbuffer = String::new();
+
+        let rowidx = 0;
+        let recidx = 0;
+        while rowidx < (self.file_header.num_fastframes-1)
+        {
+            while recidx < self.file_header.full_record_length
+            {
+                let offset = (recidx as u32 + rowidx*(recidx as u32)) as usize;
+                let tmpval = self.file_content.raw_frames[offset].to_le_bytes();
+                let tmpval = i8::from_le_bytes(tmpval);
+                csvbuffer += &tmpval.to_string();
+            }
+            csvbuffer += "\r\n";
+        }
+        let mut outfile_handle = File::create(output_file).unwrap();
+        outfile_handle.write(&csvbuffer.as_bytes());
+        
+
     }
 }
 #[derive(Default)]
 
 struct WFMContent {
-    raw_frames: Vec<i8>,
+    raw_frames: Vec<u8>,
     scaled_frames: Vec<f64>
 }
 /*
