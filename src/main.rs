@@ -5,11 +5,11 @@ use ascii_converter::*;
 
 
 fn main() {
-    //let test_file = String::from("C:\\narnia\\L0\\RF-00-0100.wfm");
-    let test_file = String::from("C:\\narnia\\RF-00-0100.wfm");
+    let test_file = String::from("C:\\narnia\\L0\\RF-00-0100.wfm");
+    //let test_file = String::from("C:\\narnia\\RF-00-0100.wfm");
     let mut test_wfm_object = WFMFile {..Default::default() };
     test_wfm_object.load_file(test_file);
-    test_wfm_object.write_csv(String::from("C:\\narnia\\output_test.csv"));
+    test_wfm_object.write_csv(String::from("C:\\narnia\\testrfoutput.csv"));
 }
 
 #[derive(Default)]
@@ -25,51 +25,60 @@ impl WFMFile {
         self.file_path = input_file;
         let mut file_handle = File::open(&self.file_path).unwrap();
         let mut header_buf: [u8; 838] = [0; 838];
-        let mut full_buffer: Vec<u8> = Vec::new();
-
         file_handle.read_exact(&mut header_buf).unwrap();
         self.file_header.parse_header(&header_buf);
-        file_handle.read_to_end(&mut full_buffer).unwrap();
-        self.file_content = WFMContent { ..Default::default() };
-        let mut recordidx = 0;
-        let mut curve_vector: Vec<i8> = Vec::with_capacity(
-            (self.file_header.num_fastframes * self.file_header.full_record_length as u32)
-            as usize);
+        
+        self.file_content = Default::default();
 
-        while recordidx < (self.file_header.num_fastframes - 1)
+        let mut record_index = 0;
+        let mut full_buf: Vec<u8> = Vec::new();
+        let mut curve_buf: Vec<i8> = Vec::with_capacity((self.file_header.full_record_length as u32 * 
+                                    self.file_header.num_fastframes) as usize);
+        file_handle.read_to_end(&mut full_buf).unwrap();
+        while record_index < (self.file_header.num_fastframes - 1)
         {
+            let offset_b: usize = (self.file_header.curve_byte_offset as usize) +
+                                ((self.file_header.full_record_length as u32 * record_index) as usize);
+            let offset_e: usize = offset_b + (self.file_header.full_record_length as usize);
+
+            //println!("Record {}\tOffset_B:{}\tOffset_E:{}", record_index, offset_b, offset_e);
             
+            let current_slice = &full_buf[offset_b..offset_e].to_vec();
+            let mut current_row: Vec<i8> = Vec::new();
+            for point in current_slice
+            {
+                let point_in_bytes = point.to_le_bytes();
+                let point_as_int = i8::from_le_bytes(point_in_bytes);
+                current_row.push(point_as_int);
+            }
+            //println!("Row size is {}", current_row.len());
+            curve_buf.append(&mut current_row);
+            //println!("Global curve buffer is {} bytes.", curve_buf.len());
+            record_index += 1;
         }
-        self.file_content.raw_frames = curve_vector;
+        self.file_content.raw_frames = curve_buf;
+        self.file_content.scaled_frames = Vec::new();
+        for entry in &self.file_content.raw_frames
+        {
+            self.file_content.scaled_frames.push(
+                (*entry as f64 * self.file_header.voltage_scale) + self.file_header.voltage_offset);
+        }
     }
 
-    fn write_csv(&mut self, output_file: String)
+    fn write_csv(&self, output_file: String)
     {
-        let csvbuffer = String::new();
-
-        let rowidx = 0;
-        let recidx = 0;
-        while rowidx < (self.file_header.num_fastframes-1)
-        {
-            while recidx < self.file_header.full_record_length
-            {
-                let offset = (recidx as u32 + rowidx*(recidx as u32)) as usize;
-                let tmpval = self.file_content.raw_frames[offset].to_le_bytes();
-                let tmpval = i8::from_le_bytes(tmpval);
-                csvbuffer += &tmpval.to_string();
-            }
-            csvbuffer += "\r\n";
-        }
-        let mut outfile_handle = File::create(output_file).unwrap();
-        outfile_handle.write(&csvbuffer.as_bytes());
-        
-
+        let mut outputbuf = String::new();
+        let mut row_index = 0;
+        let siter = &self.file_content.scaled_frames;
+        siter = siter.into_iter();
+        let mut csv_handle = File::create(output_file).unwrap();
+        csv_handle.write_all(outputbuf.as_bytes());
     }
 }
 #[derive(Default)]
 
 struct WFMContent {
-    raw_frames: Vec<u8>,
+    raw_frames: Vec<i8>,
     scaled_frames: Vec<f64>
 }
 /*
