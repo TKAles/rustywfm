@@ -9,7 +9,7 @@ fn main() {
     let test_file = String::from("C:\\narnia\\RF-00-0100.wfm");
     let mut test_wfm_object = WFMFile {..Default::default() };
     test_wfm_object.load_file(test_file);
-    test_wfm_object.write_csv(String::from("C:\\narnia\\testrfoutput.csv"));
+    
 }
 
 #[derive(Default)]
