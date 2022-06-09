@@ -1,12 +1,12 @@
+
 use std::default::Default;
 use std::fs::File;
 use std::io::{Read, Write};
 use ascii_converter::*;
 
-
 fn main() {
-    let test_file = String::from("C:\\narnia\\L0\\RF-00-0100.wfm");
-    //let test_file = String::from("C:\\narnia\\RF-00-0100.wfm");
+    //let test_file = String::from("C:\\narnia\\L0\\RF-00-0100.wfm");
+    let test_file = String::from("C:\\narnia\\RF-00-0100.wfm");
     let mut test_wfm_object = WFMFile {..Default::default() };
     test_wfm_object.load_file(test_file);
     test_wfm_object.write_csv(String::from("C:\\narnia\\testrfoutput.csv"));
@@ -19,6 +19,7 @@ struct WFMFile {
     file_content: WFMContent
 }
 impl WFMFile {
+    
     fn load_file(&mut self, input_file: String)
     {
         self.file_header = WFMHeader { ..Default::default() };
@@ -69,10 +70,19 @@ impl WFMFile {
     {
         let mut outputbuf = String::new();
         let mut row_index = 0;
-        let siter = &self.file_content.scaled_frames;
-        siter = siter.into_iter();
         let mut csv_handle = File::create(output_file).unwrap();
-        csv_handle.write_all(outputbuf.as_bytes());
+        for current_entry in self.file_content.scaled_frames.iter()
+        {
+            outputbuf += &current_entry.to_string();
+            outputbuf += ",";
+            row_index += 1;
+            if row_index == self.file_header.full_record_length
+            {
+                row_index = 0;
+                outputbuf += "\r\n";
+            }
+        }
+        csv_handle.write(outputbuf.as_bytes()).unwrap();
     }
 }
 #[derive(Default)]
