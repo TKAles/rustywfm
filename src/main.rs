@@ -1,13 +1,15 @@
+
 use std::default::Default;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use ascii_converter::*;
 
-
 fn main() {
-    let test_file = String::from("C:\\narnia\\L0\\RF-00-0100.wfm");
+    //let test_file = String::from("C:\\narnia\\L0\\RF-00-0100.wfm");
+    let test_file = String::from("C:\\narnia\\RF-00-0100.wfm");
     let mut test_wfm_object = WFMFile {..Default::default() };
     test_wfm_object.load_file(test_file);
+    
 }
 
 #[derive(Default)]
@@ -17,6 +19,7 @@ struct WFMFile {
     file_content: WFMContent
 }
 impl WFMFile {
+    
     fn load_file(&mut self, input_file: String)
     {
         self.file_header = WFMHeader { ..Default::default() };
@@ -25,16 +28,61 @@ impl WFMFile {
         let mut header_buf: [u8; 838] = [0; 838];
         file_handle.read_exact(&mut header_buf).unwrap();
         self.file_header.parse_header(&header_buf);
-        self.file_content = WFMContent { ..Default::default() };
-        let mut recordidx = 0;
         
-        let tmp_vec: [u8; self.file_header.usable_record_length] = [0; self.file_header.usable_record_length];
-        while recordidx < self.file_header.num_fastframes
-        {
-            println!("Processing Record #{}", recordidx);
+        self.file_content = Default::default();
 
-            recordidx += 1;
+        let mut record_index = 0;
+        let mut full_buf: Vec<u8> = Vec::new();
+        let mut curve_buf: Vec<i8> = Vec::with_capacity((self.file_header.full_record_length as u32 * 
+                                    self.file_header.num_fastframes) as usize);
+        file_handle.read_to_end(&mut full_buf).unwrap();
+        while record_index < (self.file_header.num_fastframes - 1)
+        {
+            let offset_b: usize = (self.file_header.curve_byte_offset as usize) +
+                                ((self.file_header.full_record_length as u32 * record_index) as usize);
+            let offset_e: usize = offset_b + (self.file_header.full_record_length as usize);
+
+            //println!("Record {}\tOffset_B:{}\tOffset_E:{}", record_index, offset_b, offset_e);
+            
+            let current_slice = &full_buf[offset_b..offset_e].to_vec();
+            let mut current_row: Vec<i8> = Vec::new();
+            for point in current_slice
+            {
+                let point_in_bytes = point.to_le_bytes();
+                let point_as_int = i8::from_le_bytes(point_in_bytes);
+                current_row.push(point_as_int);
+            }
+            //println!("Row size is {}", current_row.len());
+            curve_buf.append(&mut current_row);
+            //println!("Global curve buffer is {} bytes.", curve_buf.len());
+            record_index += 1;
         }
+        self.file_content.raw_frames = curve_buf;
+        self.file_content.scaled_frames = Vec::new();
+        for entry in &self.file_content.raw_frames
+        {
+            self.file_content.scaled_frames.push(
+                (*entry as f64 * self.file_header.voltage_scale) + self.file_header.voltage_offset);
+        }
+    }
+
+    fn write_csv(&self, output_file: String)
+    {
+        let mut outputbuf = String::new();
+        let mut row_index = 0;
+        let mut csv_handle = File::create(output_file).unwrap();
+        for current_entry in self.file_content.scaled_frames.iter()
+        {
+            outputbuf += &current_entry.to_string();
+            outputbuf += ",";
+            row_index += 1;
+            if row_index == self.file_header.full_record_length
+            {
+                row_index = 0;
+                outputbuf += "\r\n";
+            }
+        }
+        csv_handle.write(outputbuf.as_bytes()).unwrap();
     }
 }
 #[derive(Default)]
