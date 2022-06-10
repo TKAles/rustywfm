@@ -2,12 +2,15 @@
 // TK Ales, 2022
 // Version 0
 
-pub mod wfm_tools {
-    use std::{fs::File, io::{Read, Write}};
-    use ascii_converter::decimals_to_string;
+extern crate ascii_converter;
 
+pub mod wfm_tools {
+    
+    use std::{fs::File, io::{Read, Write}};
+    pub(crate) use ascii_converter::decimals_to_string;
+    /// Representation of the WFM file header as decoded.
     #[derive(Default, Clone)]
-    struct WFMHeader {
+    pub struct WFMHeader {
         wfm_version: String,
         num_impl_dim: u8,
         num_expl_dim: u8,
@@ -28,6 +31,7 @@ pub mod wfm_tools {
     }
 
     impl WFMHeader {
+        // Takes the header as a u8 array and decodes it into the struct
         fn parse_header(&mut self, header: &[u8]) {
             // First idiot check. Did we pass 838 bytes into this function?
             if header.len() != 838 {
@@ -197,7 +201,7 @@ pub mod wfm_tools {
             }
         }
 
-        fn write_csv(&self, output_file: String) {
+        pub fn write_csv(&self, output_file: String) {
             let mut outputbuf = String::new();
             let mut row_index = 0;
             let mut csv_handle = File::create(output_file).unwrap();
@@ -214,8 +218,8 @@ pub mod wfm_tools {
         }
     }
     #[derive(Default)]
-    struct WFMContent {
-        raw_frames: Vec<i8>,
-        scaled_frames: Vec<f64>,
+    pub struct WFMContent {
+        pub raw_frames: Vec<i8>,
+        pub scaled_frames: Vec<f64>,
     }
 } // end of module
