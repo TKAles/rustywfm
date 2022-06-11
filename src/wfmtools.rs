@@ -18,16 +18,16 @@ pub mod wfm_tools {
         expl_dim_type: u8,
         time_base: f64,
         is_fastframe: bool,
-        num_fastframes: u32,
+        pub num_fastframes: u32,
         curve_byte_offset: u16,
-        voltage_scale: f64,
-        voltage_offset: f64,
-        acq_time_start: f64,
-        acq_time_scale: f64,
+        pub voltage_scale: f64,
+        pub voltage_offset: f64,
+        pub acq_time_start: f64,
+        pub acq_time_scale: f64,
         precharge_offset: u16,
         postcharge_offset: u16,
         usable_record_length: u16,
-        full_record_length: u16,
+        pub full_record_length: u16,
     }
 
     impl WFMHeader {
@@ -144,8 +144,8 @@ pub mod wfm_tools {
     #[derive(Default)]
     pub struct WFMFile {
         pub file_path: String,
-        file_header: WFMHeader,
-        file_content: WFMContent,
+        pub file_header: WFMHeader,
+        pub file_content: WFMContent,
     }
 
     impl WFMFile {
