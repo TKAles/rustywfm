@@ -1,6 +1,6 @@
 // SRAS Processing Modules
 
-pub mod ScanData
+pub mod scan_data
 {
     #[derive(Default)]
     pub struct ScanLine {
@@ -36,7 +36,7 @@ pub mod ScanData
                 }
                 sumval = sumval / (self.record_length as f64);
                 self.pixel_dc_values.push(sumval as f32);
-                println!("Processed pixel #{}", pixel_idx);
+                //println!("Processed pixel #{}", pixel_idx);
                 pixel_idx += 1;
             }
             

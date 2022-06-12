@@ -91,7 +91,7 @@ pub mod wfm_tools {
             }
 
             self.curve_byte_offset = 838 + ((self.num_fastframes - 1) * 54) as u16;
-            println!("Curve data begins as offset {}", self.curve_byte_offset);
+            //println!("Curve data begins as offset {}", self.curve_byte_offset);
 
             // Voltage information and scaling info.
             let vscale = &header[0x0a8..0x0b0];
@@ -111,10 +111,10 @@ pub mod wfm_tools {
                     .expect("Problem parsing start trigger time"),
             );
             self.time_base = self.acq_time_scale;
-            println!(
+            /*println!(
                 "{}\t{}\t{}\t{}",
                 self.voltage_scale, self.voltage_offset, self.acq_time_scale, self.acq_time_start
-            );
+            );*/
 
             // Trigger detail information is not implemented yet.
 
@@ -131,17 +131,18 @@ pub mod wfm_tools {
             self.full_record_length =
                 u32::from_le_bytes(fullrec.try_into().expect("Full record length parse failed"))
                     as u16;
-            println!(
+            /*println!(
                 "Precharge: {} Postcharge: {} Record Length: {} Full Record: {}",
                 self.precharge_offset,
                 self.postcharge_offset,
                 self.usable_record_length,
                 self.full_record_length
-            );
+            );*/
         }
     }
 
     #[derive(Default)]
+    #[allow(dead_code)]
     pub struct WFMFile {
         pub file_path: String,
         pub file_header: WFMHeader,
