@@ -20,10 +20,10 @@ pub mod wfm_tools {
         is_fastframe: bool,
         pub num_fastframes: u32,
         curve_byte_offset: u16,
-        pub voltage_scale: f64,
-        pub voltage_offset: f64,
-        pub acq_time_start: f64,
-        pub acq_time_scale: f64,
+        voltage_scale: f64,
+        voltage_offset: f64,
+        acq_time_start: f64,
+        acq_time_scale: f64,
         precharge_offset: u16,
         postcharge_offset: u16,
         usable_record_length: u16,
@@ -111,10 +111,10 @@ pub mod wfm_tools {
                     .expect("Problem parsing start trigger time"),
             );
             self.time_base = self.acq_time_scale;
-            /*println!(
+            /* println!(
                 "{}\t{}\t{}\t{}",
                 self.voltage_scale, self.voltage_offset, self.acq_time_scale, self.acq_time_start
-            );*/
+            ); */
 
             // Trigger detail information is not implemented yet.
 
@@ -131,18 +131,17 @@ pub mod wfm_tools {
             self.full_record_length =
                 u32::from_le_bytes(fullrec.try_into().expect("Full record length parse failed"))
                     as u16;
-            /*println!(
+            /* println!(
                 "Precharge: {} Postcharge: {} Record Length: {} Full Record: {}",
                 self.precharge_offset,
                 self.postcharge_offset,
                 self.usable_record_length,
                 self.full_record_length
-            );*/
+            ); */
         }
     }
 
     #[derive(Default)]
-    #[allow(dead_code)]
     pub struct WFMFile {
         pub file_path: String,
         pub file_header: WFMHeader,

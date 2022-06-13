@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 ascii_converter = "0.3.0"
+rustfft = "6.0.1"

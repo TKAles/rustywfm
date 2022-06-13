@@ -2,6 +2,8 @@
 
 pub mod scan_data
 {
+    use std::sync::Arc;
+    use rustfft::{FftPlanner, num_complex::Complex};
     #[derive(Default)]
     pub struct ScanLine {
         pub line_length: u32,
@@ -48,6 +50,9 @@ pub mod scan_data
             }
             println!("{}", outputstr);
         }
+        pub fn process_fft_values(&mut self) {
+            
     }
-
+    }
+    
 }

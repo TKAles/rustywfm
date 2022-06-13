@@ -4,8 +4,9 @@ use wfmtools::wfm_tools;
 use srasprocessor::scan_data;
 
 fn main() {
-    let test_file = String::from("C:\\narnia\\L0\\DC-00-0100.wfm");
+    //let test_file = String::from("C:\\narnia\\L0\\DC-00-0100.wfm");
     //let test_file = String::from("C:\\narnia\\RF-00-0100.wfm");
+    let test_file = String::from("/Users/narnia/L0/DC-00-0100.wfm");
     let mut test_wfm_object = wfm_tools::WFMFile::new();
     test_wfm_object.load_file(test_file);
     let mut test_scandata = scan_data::ScanLine::new();
