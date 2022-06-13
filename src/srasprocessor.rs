@@ -3,7 +3,8 @@
 pub mod scan_data
 {
     use std::sync::Arc;
-    use rustfft::{FftPlanner, num_complex::Complex};
+    use rustfft::{*, num_traits::ToPrimitive};
+    use num_complex::Complex;
     #[derive(Default)]
     pub struct ScanLine {
         pub line_length: u32,
@@ -51,8 +52,36 @@ pub mod scan_data
             println!("{}", outputstr);
         }
         pub fn process_fft_values(&mut self) {
+            let mut fftplan: FftPlanner<f64> = FftPlanner::new();
+            let fft = fftplan.plan_fft_forward(16384);
+
+            // create a temp array and pad it out with zeros.
+            let mut padded_input_arr = vec![Complex {re: 0.0f64, im:0.0f64}; 16384];
             
-    }
+            // single pixel proof-of-concept
+            let pixel_num = 50;     // figure out offset in array for test pixel
+            let offset_b: usize = (pixel_num * self.record_length) as usize;
+            let offset_e: usize = offset_b + (self.record_length as usize);
+            // slice out test waveform
+            let pixel_slice = &self.scaled_data[offset_b..offset_e].to_vec();
+            
+            let mut idx: usize = 0;
+            for current_value in pixel_slice.iter()
+            {
+                // copy in waveform to pre-padded fft input buffer
+                padded_input_arr[idx] = Complex { re: *current_value as f64, im: 0.0f64 };
+                idx += 1;
+            }
+
+            fft.process(&mut padded_input_arr);
+            let mut pbuf: String = String::new();
+            for cval in padded_input_arr.iter()
+            {
+                pbuf += &cval.to_string();
+                pbuf += ", ";
+            }
+            println!("{}", pbuf);
+        }
     }
     
 }
