@@ -1,9 +1,44 @@
 [package]
-name = "rustywfm"
-version = "0.1.0"
-edition = "2021"
+name = "wfm_reader"
+version = "1.0.0"
+authors = ["TK Ales"]
+edition = "2025"
+description = "A Rust library for reading Tektronix WFM v3 files with FastFrame support"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tkales/rustywfm"
+documentation = "https://docs.rs/wfm_reader"
+homepage = "https://github.com/tkales/rustywfm"
+readme = "README.md"
+keywords = ["wfm", "tektronix", "oscilloscope", "fastframe", "waveform"]
+categories = ["science", "parsing", "filesystem"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "wfm_reader"
+path = "src/lib.rs"
+
+[[bin]]
+name = "wfm_reader"
+path = "src/main.rs"
+required-features = ["cli"]
 
 [dependencies]
-ascii_converter = "0.3.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[features]
+default = ["cli"]
+cli = []
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+
+[profile.dev]
+opt-level = 0
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
