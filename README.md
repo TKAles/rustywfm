@@ -90,20 +90,11 @@ This library supports Tektronix WFM version 3 files with the following features:
 - Time base and acquisition start time
 - Pre-charge and post-charge offsets
 
-## Key Improvements Over Original
-
-1. **Proper Error Handling**: Uses `Result` types instead of panics
-2. **Memory Efficiency**: Fixed off-by-one error in frame reading
-3. **Better CSV Export**: Buffered writing and multiple export formats
-4. **Type Safety**: Custom error types with `thiserror`
-5. **Documentation**: Comprehensive docs and examples
-6. **Testing**: Unit and integration tests included
-
 ## Building from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/wfm_reader.git
+git clone https://github.com/TKAles/rustywfm.git
 cd wfm_reader
 
 # Build the library
@@ -117,8 +108,7 @@ cargo install --path .
 ```
 
 ## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
+This is a hella spare time project though so don't expect much if only issues are submitted. Pulls will be gotten to eventually.
 
 ## License
 
