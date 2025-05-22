@@ -178,13 +178,15 @@ impl WfmFile {
         
         // Process each frame
         for record_index in 0..self.file_header.num_fastframes {
-            let offset_b = (self.file_header.curve_byte_offset as usize) +
+            // full_buf starts after the header, so we need to adjust the offset
+            let offset_b = ((self.file_header.curve_byte_offset - 838) as usize) +
                           (self.file_header.full_record_length as usize * record_index as usize);
             let offset_e = offset_b + self.file_header.full_record_length as usize;
             
             if offset_e > full_buf.len() {
                 return Err(WfmError::ParseError(
-                    format!("Unexpected end of file at frame {}", record_index)
+                    format!("Unexpected end of file at frame {}: offset {} > buffer length {}", 
+                            record_index, offset_e, full_buf.len())
                 ));
             }
             
@@ -344,7 +346,7 @@ mod tests {
         let header = create_test_header();
         temp_file.write_all(&header).unwrap();
         
-        // Write FastFrame offset data (54 bytes per frame, 4 frames)
+        // Write FastFrame offset data (54 bytes per frame, 4 frames since num_fastframes-1)
         temp_file.write_all(&vec![0u8; 54 * 4]).unwrap();
         
         // Write test curve data (5 frames, 1000 samples each)
@@ -359,7 +361,8 @@ mod tests {
         
         // Load the file
         let mut wfm = WfmFile::new();
-        wfm.load_file(temp_file.path()).unwrap();
+        let result = wfm.load_file(temp_file.path());
+        assert!(result.is_ok(), "Failed to load file: {:?}", result.err());
         
         assert_eq!(wfm.file_header.num_fastframes, 5);
         assert_eq!(wfm.file_content.raw_frames.len(), 5000);
@@ -390,6 +393,12 @@ mod tests {
         wfm.file_header.full_record_length = 5;
         
         let times = wfm.get_time_values();
-        assert_eq!(times, vec![0.0, 0.1, 0.2, 0.3, 0.4]);
+        let expected = vec![0.0, 0.1, 0.2, 0.3, 0.4];
+        
+        assert_eq!(times.len(), expected.len());
+        for (i, (&actual, &expected)) in times.iter().zip(expected.iter()).enumerate() {
+            assert!((actual - expected).abs() < 1e-10, 
+                    "Time value {} mismatch: {} != {}", i, actual, expected);
+        }
     }
 }
